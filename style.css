@@ -182,11 +182,75 @@ body {
 
 .party-panel .slot {
   width: 62px;
-  height: 62px;
+  height: 82px; /* Increased to accommodate name below */
   border-radius: 10px;
   background: var(--bg-surface);
   border: 1px solid hsla(var(--base-hue), 20%, 0%, 0.4);
   box-shadow: var(--shadow-md);
+  cursor: pointer;
+  overflow: visible; /* Allow name to show below */
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.party-panel .slot.filled {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.party-panel .slot.filled:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.party-panel .slot.filled .toon-wrapper {
+  width: 62px;
+  height: 62px;
+  position: relative;
+  overflow: hidden;
+}
+
+.party-panel .slot.filled img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.party-panel .slot.filled .remove-toon {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  background: var(--bg-highest);
+  color: var(--text-bright);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 2;
+}
+
+.party-panel .slot.filled:hover .remove-toon {
+  opacity: 1;
+}
+
+
+.party-panel .slot.filled span {
+  font-size: 12px;
+  color: var(--text-bright);
+  font-weight: 600;
+  margin-top: 6px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
 .add-slot {
@@ -198,6 +262,8 @@ body {
 	border: 4px solid rgba(255,255,255,0.06);
 	font-size: 28px;
 	cursor: pointer;
+    align-items: center;
+    justify-content: center;
 }
 
 .party-count { color: var(--text); opacity: 0.9; }
@@ -347,8 +413,64 @@ body {
     box-shadow: var(--shadow-sm);
 }
 
-.avatar { width:140px; height:120px; background:#2b2b2b; border-radius:8px; }
+.avatar { 
+    width:140px; 
+    height:120px; 
+    background:#2b2b2b; 
+    border-radius:8px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid hsla(var(--base-hue), 20%, 0%, 0.4);
+}
+
+.avatar:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
 .profile-name { margin:0; font-size:20px; }
+
+/* Profile selector popup */
+.profile-selector-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.profile-selector-popup.active {
+    display: flex;
+}
+
+.profile-selector-popup .popup-content {
+    position: relative;
+    z-index: 1001;
+}
+
+/* Make profile selection items larger */
+.profile-selector-popup .toon-item img {
+    width: 100px;
+    height: 100px;
+}
+
+/* Highlight selected profile */
+.profile-selector-popup .toon-item.selected {
+    background: hsla(var(--accent-hue), 60%, 50%, 0.2);
+    transform: translateY(-2px);
+}
 .colors { display:flex; flex-direction:column; gap:10px; width:100%; margin-top:6px; }
 .color { height:34px; border-radius:8px; }
 .color.red { background: var(--health); }
@@ -389,7 +511,112 @@ body {
 /* hide the floating toggle on wide screens */
 .profile-toggle { display: none; }
 
+/* Toon selector popup */
+.toon-selector-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.toon-selector-popup.active {
+    display: flex;
+}
+
+.popup-content {
+    background: var(--bg-raised);
+    border-radius: 12px;
+    padding: 24px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid hsla(var(--base-hue), 20%, 0%, 0.4);
+    scrollbar-width: thin;
+    scrollbar-color: hsla(var(--accent-hue), 60%, 50%, 0.3) transparent;
+}
+
+/* Webkit scrollbar styling */
+.popup-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.popup-content::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 4px;
+}
+
+.popup-content::-webkit-scrollbar-thumb {
+    background: hsla(var(--accent-hue), 60%, 50%, 0.3);
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+.popup-content::-webkit-scrollbar-thumb:hover {
+    background: hsla(var(--accent-hue), 60%, 50%, 0.5);
+}
+
+.popup-content h3 {
+    margin: 0 0 20px 0;
+    color: var(--text-bright);
+    font-size: 18px;
+}
+
+.toon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 16px;
+    padding: 8px;
+}
+
+.toon-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.toon-item:hover {
+    background: var(--bg-highest);
+    transform: translateY(-2px);
+}
+
+.toon-item img {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: var(--bg-surface);
+    border: 1px solid hsla(var(--base-hue), 20%, 0%, 0.4);
+}
+
+.toon-item span {
+    color: var(--text-bright);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+}
+
 @media (max-width: 420px) {
 	.party-panel .slot, .add-slot { width:48px; height:48px }
 	.stat-label { width:56px; }
+    .toon-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    }
+    .toon-item img {
+        width: 60px;
+        height: 60px;
+    }
 }

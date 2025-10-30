@@ -60,58 +60,43 @@ function toChartSeries(stat) {
 const STAR_VALUE = [
     { 
         star: 1, 
-        skill: 1.0,          // Skill check value (default)
-        skillSize: 50,       // Skill check size
-        walk: 10.0,         // Walking speed
-        speed: 20.0,        // Running speed (default)
-        run: 20.0,          // Running speed
+        skill: [1.0, 50],
+        speed: [10.0, 20.0],
         stamina: 100, 
         stealth: 0, 
-        extract: 0.75 
+        extract: 0.75
     },
     { 
         star: 2, 
-        skill: 1.5, 
-        skillSize: 100, 
-        walk: 12.5, 
-        speed: 22.5,
-        run: 22.5, 
+        skill: [1.5, 100], 
+        speed: [12.5, 22.5], 
         stamina: 125, 
         stealth: 5, 
         extract: 0.85 
     },
     { 
         star: 3, 
-        skill: 2.0, 
-        skillSize: 150, 
-        walk: 15.0, 
-        speed: 25.0,
-        run: 25.0, 
+        skill: [2.0, 150], 
+        speed: [15.0, 25.0], 
         stamina: 150, 
         stealth: 10, 
-        extract: 1.00 
+        extract: 1.00
     },
     { 
         star: 4, 
-        skill: 2.5, 
-        skillSize: 200, 
-        walk: 17.5, 
-        speed: 27.5,
-        run: 27.5, 
+        skill: [2.5, 200], 
+        speed: [17.5, 27.5],
         stamina: 175, 
         stealth: 15, 
-        extract: 1.20 
+        extract: 1.20
     },
     { 
         star: 5, 
-        skill: 3.0, 
-        skillSize: 250, 
-        walk: 20.0, 
-        speed: 30.0,
-        run: 30.0, 
+        skill: [3.0, 250],
+        speed : [20.0, 30.0],
         stamina: 200, 
         stealth: 20, 
-        extract: 1.50 
+        extract: 1.50
     }
 ];
 

@@ -18,14 +18,20 @@
 	</header>
 
 	<main class="container">
+		<div class="toon-selector-popup">
+			<div class="popup-content">
+				<h3>Select a Toon</h3>
+				<div class="toon-grid"></div>
+			</div>
+		</div>
+
 		<section class="left-col">
 			<div class="panel party-panel">
 				<div class="panel-header">
-					<h2>Your Party</h2>
+					<h2>Your Party (<span id="party-count"></span>)</h2>
 					<h2 class="party-count"></h2>
 				</div>
 				<div class="party-members">
-					<div class="slot"></div>
 					<button class="add-slot">+</button>
 				</div>
 			</div>
@@ -52,9 +58,15 @@
 		</section>
 
 		<aside class="right-col">
+            <div class="profile-selector-popup">
+                <div class="popup-content">
+                    <h3>Select Profile Picture</h3>
+                    <div class="toon-grid profile-grid"></div>
+                </div>
+            </div>
 			<div class="panel profile-panel">
 				<button class="minimize-btn" aria-label="Toggle profile panel">&lt;</button>
-				<div class="avatar"></div>
+				<div class="avatar" role="button" aria-label="Change profile picture"></div>
 				<!-- <h3 class="profile-name">Goob</h3> -->
 				<div class="colors">
 					<div class="color red"></div>
@@ -73,6 +85,7 @@
 		</aside>
 	</main>
 
-	<script src="script.js"></script>
 </body>
+<script src="script.js"></script>
+<script src="database.js"></script>
 </html>
