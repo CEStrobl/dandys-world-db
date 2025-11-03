@@ -67,14 +67,38 @@
 			<div class="panel profile-panel">
 				<button class="minimize-btn" aria-label="Toggle profile panel">&lt;</button>
 				<div class="avatar" role="button" aria-label="Change profile picture"></div>
-				<!-- <h3 class="profile-name">Goob</h3> -->
+				<h3 class="profile-name">No Toon</h3>
 				<div class="colors">
-					<div class="color red"></div>
-					<div class="color orange"></div>
-					<div class="color yellow"></div>
-					<div class="color green"></div>
-					<div class="color blue"></div>
-					<div class="color purple"></div>
+					<!-- Health -->
+					<div class="color red" data-stat-row="health">
+						<div class="stat-label">Health</div>
+						<div class="stat-stars" data-stat="health"></div>
+					</div>
+					<!-- Skill Check -->
+					<div class="color orange" data-stat-row="skill">
+						<div class="stat-label">Skill</div>
+						<div class="stat-stars" data-stat="skill"></div>
+					</div>
+					<!-- Movement Speed -->
+					<div class="color yellow" data-stat-row="speed">
+						<div class="stat-label">Speed</div>
+						<div class="stat-stars" data-stat="speed"></div>
+					</div>
+					<!-- Stamina -->
+					<div class="color green" data-stat-row="stam">
+						<div class="stat-label">Stamina</div>
+						<div class="stat-stars" data-stat="stam"></div>
+					</div>
+					<!-- Stealth -->
+					<div class="color blue" data-stat-row="stealth">
+						<div class="stat-label">Stealth</div>
+						<div class="stat-stars" data-stat="stealth"></div>
+					</div>
+					<!-- Extraction -->
+					<div class="color purple" data-stat-row="extract">
+						<div class="stat-label">Extract</div>
+						<div class="stat-stars" data-stat="extract"></div>
+					</div>
 				</div>
 				<div class="pager">
 					<button class="pager-btn">&lt;</button>
