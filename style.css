@@ -28,11 +28,12 @@ body {
   --inset-shadow: inset 0 2px 4px hsla(var(--base-hue), 20%, 0%, 0.2);
 
   /* Stat bar colors */
-  --health: hsl(0, 65%, 55%);
-  --skill: hsl(30, 65%, 45%);
-  --speed: hsl(45, 70%, 55%);
-  --stamina: hsl(135, 60%, 45%);
-  --stealth: hsl(210, 60%, 50%);
+  --health: hsla(0, 65%, 55%, 0.85);
+  --skill: hsla(30, 65%, 45%, 0.85);
+  --speed: hsla(45, 70%, 55%, 0.85);
+  --stamina: hsla(135, 60%, 45%, 0.85);
+  --stealth: hsla(210, 60%, 50%, 0.85);
+  --extract: hsla(270, 60%, 55%, 0.85);
 
   background-color: var(--bg-base);
   color: var(--text-base);
@@ -250,6 +251,7 @@ body {
   height: 62px;
   position: relative;
   overflow: hidden;
+  border-radius: 10px;
 }
 
 .party-panel .slot.filled img {
@@ -316,7 +318,7 @@ body {
     border: 1px solid hsla(var(--base-hue), 20%, 0%, 0.4);
     padding: 8px 12px;
     padding-right: 32px;
-    border-radius: 6px;
+    border-radius: 10px;
     font-weight: 600;
     font-size: 15px;
     cursor: pointer;
@@ -327,24 +329,13 @@ body {
     background-repeat: no-repeat;
     background-position: right 8px center;
     background-size: 16px;
+    max-width: 120px;
 }
 
-.view-panel select:hover {
-    border-color: hsla(var(--base-hue), 20%, 0%, 0.6);
-    background-color: hsl(var(--base-hue), 15%, 20%);
+.view-panel select:focus{
+    outline: #00000000;
 }
 
-.view-panel select:hover {
-	border-color: var(--accent);
-}
-
-.view-panel select:focus {
-	outline: none;
-	border-color: var(--accent);
-	box-shadow: 
-		var(--inset-shadow),
-		0 0 0 2px hsla(var(--accent-hue), 60%, 60%, 0.25);
-}
 
 .view-panel select option {
 	background-color: var(--bg-surface);
@@ -456,7 +447,7 @@ body {
 
 .avatar { 
     width:140px; 
-    height:120px; 
+    height:140px; 
     background:#2b2b2b; 
     border-radius:8px;
     cursor: pointer;
@@ -597,14 +588,48 @@ body {
     }
 }
 .colors { display:flex; flex-direction:column; gap:10px; width:100%; margin-top:6px; }
-.color { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; height:40px; border-radius:8px; color: var(--text-bright); font-weight:700; }
-.color.red { background: var(--health); }
-.color.orange { background: var(--skill); }
-.color.yellow { background: var(--speed); }
-.color.green { background: var(--stamina); }
-.color.blue { background: var(--stealth); }
-.color.purple { background: hsl(270, 60%, 55%); }
-.stat-stars { font-size:16px; letter-spacing:4px; }
+.color { 
+    position: relative;
+    display: flex; 
+    flex-direction: column;
+    padding: 8px 12px;
+    height: 50px;
+    border-radius: 8px;
+    color: var(--text-bright);
+    font-weight: 700;
+    /* text-shadow: 0 1px 2px rgba(0,0,0,0.5); */
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+}
+.color .stat-label {
+    font-size: 13px;
+    margin-bottom: 4px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+.color .stat-stars {
+    align-self: center;
+}
+.color.red { background: var(--health); backdrop-filter: blur(4px); }
+.color.orange { background: var(--skill); backdrop-filter: blur(4px); }
+.color.yellow { background: var(--speed); backdrop-filter: blur(4px); }
+.color.green { background: var(--stamina); backdrop-filter: blur(4px); }
+.color.blue { background: var(--stealth); backdrop-filter: blur(4px); }
+.color.purple { background: var(--extract); backdrop-filter: blur(4px); }
+.stat-stars { 
+    font-size: 20px;
+    font-weight: 600;
+    background-color: rgba(0, 0, 0, 0.297);
+    width: 90%;
+    text-align: center;
+    padding: 5px 10px;
+    border-radius: 6px;
+}
+/* Apply letter spacing only in star mode */
+.stat-stars[data-mode="stars"] {
+    letter-spacing: 4px;
+}
+.stat-stars[data-mode="numbers"] {
+    letter-spacing: normal;
+}
 .pager { display:flex; align-items:center; gap:8px; width:100%; justify-content:space-between; margin-top:6px; }
 .pager-btn { background:transparent; border: none; color:var(--text); font-size:18px; cursor:pointer }
 
@@ -741,3 +766,87 @@ body {
         height: 60px;
     }
 }
+
+/* View controls with colored trait select */
+.view-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--bg-base);
+    border-radius: 8px;
+    border: 1px solid hsla(var(--base-hue),20%,0%,0.3);
+}
+.view-controls label {
+    font-weight: 600;
+    color: var(--text-bright);
+    font-size: 14px;
+}
+.view-controls select {
+    color: var(--text-bright);
+    border: 1px solid hsla(var(--base-hue),20%,0%,0.3);
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    /* Prevent text selection while scrolling */
+    user-select: none;
+    /* Show a custom cursor to hint at scroll functionality */
+    cursor: ns-resize;
+}
+/* Trait select with color backgrounds */
+.trait-select {
+    flex: 1;
+    min-width: 120px;
+    background: var(--bg-base);
+}
+.trait-select option[value="Skill check"] { background-color: var(--skill); }
+.trait-select option[value="Speed"] { background-color: var(--speed); }
+.trait-select option[value="Stamina"] { background-color: var(--stamina); }
+.trait-select option[value="Stealth"] { background-color: var(--stealth); }
+.trait-select option[value="Extraction"] { background-color: var(--extract); }
+/* Color the select based on current choice */
+.trait-select[data-current="Skill check"] { background-color: var(--skill); }
+.trait-select[data-current="Speed"] { background-color: var(--speed); }
+.trait-select[data-current="Stamina"] { background-color: var(--stamina); }
+.trait-select[data-current="Stealth"] { background-color: var(--stealth); }
+.trait-select[data-current="Extraction"] { background-color: var(--extract); }
+/* Display select (Stars/Value) */
+.display-select {
+    background: var(--bg-highest);
+    min-width: 80px;
+}
+.view-sorted {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 240px;
+    overflow: auto;
+    padding: 8px;
+    background: var(--bg-surface);
+    border-radius: 8px;
+    border: 1px solid hsla(var(--base-hue),20%,0%,0.35);
+}
+.sorted-item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 8px;
+    border-radius: 8px;
+    background: linear-gradient(to right, rgba(0,0,0,0.04), transparent);
+}
+.sorted-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--bg-base);
+    border: 1px solid hsla(var(--base-hue),20%,0%,0.25);
+}
+.sorted-thumb img { width:100%; height:100%; object-fit:cover }
+.sorted-name { flex: 1; font-weight:700; color:var(--text-bright) }
+.sorted-value { font-weight:700; color:var(--text-bright); min-width:64px; text-align:right }

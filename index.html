@@ -28,8 +28,8 @@
 		<section class="left-col">
 			<div class="panel party-panel">
 				<div class="panel-header">
-					<h2>Your Party (<span id="party-count"></span>)</h2>
-					<h2 class="party-count"></h2>
+					<h3>Your Party (<span id="party-count"></span>)</h3>
+					<h3 class="party-count"></h3>
 				</div>
 				<div class="party-members">
 					<button class="add-slot">+</button>
@@ -37,22 +37,23 @@
 			</div>
 
 			<div class="panel view-panel">
-				<div class="panel-header small">
+				<div class="view-controls">
 					<label for="viewby">View by</label>
-					<select id="viewby">
-						<option>Stealth</option>
-						<option>Power</option>
+					<select id="viewby" class="trait-select">
+						<option>Skill check</option>
 						<option>Speed</option>
+						<option>Stamina</option>
+						<option>Stealth</option>
+						<option>Extraction</option>
+					</select>
+					<select id="viewmode" class="display-select">
+						<option>Stars</option>
+						<option>Value</option>
 					</select>
 				</div>
 
-				<div class="stat-list">
-					<div class="stat-row">
-						<div class="stat-label">x</div>
-						<div class="stat-items">
-							<div class="stat-slot"></div>
-						</div>
-					</div>
+				<div class="view-sorted" aria-live="polite">
+					<!-- Populated by JS: .sorted-item elements -->
 				</div>
 			</div>
 		</section>
