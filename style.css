@@ -28,12 +28,19 @@ body {
   --inset-shadow: inset 0 2px 4px hsla(var(--base-hue), 20%, 0%, 0.2);
 
   /* Stat bar colors */
-  --health: hsla(0, 65%, 55%, 0.85);
-  --skill: hsla(30, 65%, 45%, 0.85);
-  --speed: hsla(45, 70%, 55%, 0.85);
-  --stamina: hsla(135, 60%, 45%, 0.85);
-  --stealth: hsla(210, 60%, 50%, 0.85);
-  --extract: hsla(270, 60%, 55%, 0.85);
+    --health: hsla(0, 65%, 55%, 0.85);
+    --skill: hsla(30, 65%, 45%, 0.85);
+    --speed: hsla(45, 70%, 55%, 0.85);
+    --stamina: hsla(135, 60%, 45%, 0.85);
+    --stealth: hsla(210, 60%, 50%, 0.85);
+    --extract: hsla(270, 60%, 55%, 0.85);
+    /* lighter tints used for column backgrounds */
+    --health-tint: hsla(0, 65%, 55%, 0.07);
+    --skill-tint: hsla(30, 65%, 45%, 0.07);
+    --speed-tint: hsla(45, 70%, 55%, 0.07);
+    --stamina-tint: hsla(135, 60%, 45%, 0.07);
+    --stealth-tint: hsla(210, 60%, 50%, 0.07);
+    --extract-tint: hsla(270, 60%, 55%, 0.07);
 
   background-color: var(--bg-base);
   color: var(--text-base);
@@ -830,6 +837,72 @@ body {
     border-radius: 8px;
     border: 1px solid hsla(var(--base-hue),20%,0%,0.35);
 }
+
+/* Table view for chart-style display */
+.view-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-base);
+    border: 1px solid hsla(var(--base-hue), 20%, 0%, 0.12);
+}
+.view-table thead th {
+    text-align: center;
+    background: var(--bg-raised);
+    border-bottom: 1px solid hsla(var(--base-hue), 20%, 0%, 0.08);
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    height: 40px;
+}
+
+/* Set wider width for name column */
+.view-table thead th.col-name {
+    width: 180px;
+    min-width: 180px;
+    text-align: left;
+    padding-left: 60px;  /* Space for the icon */
+}
+
+/* Set fixed width for stat columns */
+.view-table thead th:not(.col-name) {
+    width: 120px;
+}
+.view-table tbody td {
+    border-top: 1px solid hsla(var(--base-hue), 20%, 0%, 0.04);
+    text-align: center;
+}
+
+.view-table tbody td:first-child {
+    width: 60px;
+    min-width: 60px;
+    max-width: 60px;
+    padding: 10px;
+}
+.view-table .toon-thumb { 
+    width: 40px; 
+    height: 40px; 
+    object-fit: contain; 
+    border-radius: 6px;
+    background: var(--bg-surface);
+}
+.view-table .sorted-stat { font-weight: 700; }
+.view-table .sorted-name { 
+    text-align: left; 
+    font-weight: 700;
+    padding: 8px;
+    width: 180px;
+    min-width: 180px;
+}
+.name-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.name-container span {
+    font-weight: 700;
+    color: var(--text-bright);
+}
+.sort-marker { font-size: 12px; margin-left:6px; color: var(--text-muted) }
 .sorted-item {
     display: flex;
     gap: 10px;
@@ -839,14 +912,31 @@ body {
     background: linear-gradient(to right, rgba(0,0,0,0.04), transparent);
 }
 .sorted-thumb {
-    width: 40px;
-    height: 40px;
+    width: 40px !important;
+    height: 40px !important;
+    max-width: 40px !important;
     border-radius: 6px;
     overflow: hidden;
     flex-shrink: 0;
     background: var(--bg-base);
     border: 1px solid hsla(var(--base-hue),20%,0%,0.25);
 }
-.sorted-thumb img { width:100%; height:100%; object-fit:cover }
 .sorted-name { flex: 1; font-weight:700; color:var(--text-bright) }
 .sorted-value { font-weight:700; color:var(--text-bright); min-width:64px; text-align:right }
+
+/* Column color indicators: border-left accents and header tint via class names */
+
+/* Column color visuals: top indicator bar on header + faint tint for cells */
+.view-table thead th.col-health::after { content: ''; display:block; height:6px; background: var(--health); position:absolute; left:0; right:0; top:0; border-top-left-radius:6px; border-top-right-radius:6px; }
+.view-table thead th.col-skill::after  { content: ''; display:block; height:6px; background: var(--skill); position:absolute; left:0; right:0; top:0; border-top-left-radius:6px; border-top-right-radius:6px; }
+.view-table thead th.col-speed::after  { content: ''; display:block; height:6px; background: var(--speed); position:absolute; left:0; right:0; top:0; border-top-left-radius:6px; border-top-right-radius:6px; }
+.view-table thead th.col-stam::after   { content: ''; display:block; height:6px; background: var(--stamina); position:absolute; left:0; right:0; top:0; border-top-left-radius:6px; border-top-right-radius:6px; }
+.view-table thead th.col-stealth::after{ content: ''; display:block; height:6px; background: var(--stealth); position:absolute; left:0; right:0; top:0; border-top-left-radius:6px; border-top-right-radius:6px; }
+.view-table thead th.col-extract::after{ content: ''; display:block; height:6px; background: var(--extract); position:absolute; left:0; right:0; top:0; border-top-left-radius:6px; border-top-right-radius:6px; }
+
+.view-table td.col-health { background-color: var(--health-tint); }
+.view-table td.col-skill  { background-color: var(--skill-tint); }
+.view-table td.col-speed  { background-color: var(--speed-tint); }
+.view-table td.col-stam   { background-color: var(--stamina-tint); }
+.view-table td.col-stealth{ background-color: var(--stealth-tint); }
+.view-table td.col-extract{ background-color: var(--extract-tint); }

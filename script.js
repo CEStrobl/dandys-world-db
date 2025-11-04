@@ -13,6 +13,25 @@ function findToonGlobal(toonName) {
 	return (typeof getToon === 'function') ? getToon(toonName) : (TOONS.find(x => x.name.toLowerCase() === String(toonName).toLowerCase()) || null);
 }
 
+// Shared formatter: convert a star rating for a given stat into a display string
+function formatStatValueGlobal(stat, starRating) {
+	const row = (typeof getValueRow === 'function') ? getValueRow(starRating) : (STAR_VALUE.find(r => r.star === Number(starRating)) || null);
+	if (!row) return String(starRating || '');
+	if (stat === 'skill') {
+		const v = row.skill; return Array.isArray(v) ? `${v[0]} (${v[1]})` : String(v);
+	}
+	if (stat === 'speed') {
+		const v = row.speed; return Array.isArray(v) ? `${v[0]} (${v[1]})` : String(v);
+	}
+	if (stat === 'stam') return String(row.stamina);
+	if (stat === 'stealth') return String(row.stealth);
+	if (stat === 'extract') return String(row.extract);
+	return String(starRating);
+}
+
+// Chart sorting state shared across renders
+const chartSortState = { col: null, dir: 0 }; // dir: 0 = none, 1 = asc, -1 = desc
+
 // Sort party member slots by a given stat key (e.g. 'stealth', 'speed', 'skill')
 function sortPartyByStat(statKey) {
 	const partyMembers = document.querySelector('.party-members');
@@ -50,7 +69,6 @@ function updateSortedView(statKey, displayMode) {
 	const modeSelect = document.getElementById('viewmode');
 	if (!statKey && viewSelect) {
 		statKey = viewSelect.value.toLowerCase().replace(/[^a-z]/g, '');
-		// normalize some common labels back to keys
 		if (viewSelect.value === 'Skill check') statKey = 'skill';
 		if (viewSelect.value === 'Stamina') statKey = 'stam';
 		if (viewSelect.value === 'Extraction') statKey = 'extract';
@@ -61,51 +79,145 @@ function updateSortedView(statKey, displayMode) {
 	if (!container) return;
 	container.innerHTML = '';
 
+	const statsOrder = ['health','skill','speed','stam','stealth','extract'];
 	const partyMembers = document.querySelectorAll('.party-members .slot.filled');
 	const list = Array.from(partyMembers).map((slot, idx) => {
 		const nameEl = slot.querySelector('span');
 		const name = nameEl ? nameEl.textContent.trim() : '';
 		const toon = findToonGlobal(name);
-		const val = toon && typeof toon[statKey] === 'number' ? toon[statKey] : 0;
-		return { name, val, toon, idx };
+		const stats = {};
+		statsOrder.forEach(s => { stats[s] = toon && typeof toon[s] === 'number' ? toon[s] : 0; });
+		return { name, toon, stats, idx };
 	});
 
-	list.sort((a,b) => {
-		if (b.val !== a.val) return b.val - a.val;
-		return a.idx - b.idx;
-	});
+	// Determine sorting: header clicks control chartSortState; if none set, default to statKey desc
+	let sorted = list.slice();
+	if (chartSortState.col) {
+		const col = chartSortState.col;
+		const dir = chartSortState.dir || 0;
+		if (col === 'name') {
+			sorted.sort((a,b) => {
+				const av = (a.name || '').toLowerCase();
+				const bv = (b.name || '').toLowerCase();
+				if (av !== bv) return av < bv ? -1 * dir : 1 * dir;
+				return a.idx - b.idx;
+			});
+		} else if (statsOrder.includes(col)) {
+			sorted.sort((a,b) => {
+				const av = a.stats[col] || 0;
+				const bv = b.stats[col] || 0;
+				if (av !== bv) return (av - bv) * dir;
+				return a.idx - b.idx;
+			});
+		}
+	} else if (statKey) {
+		sorted.sort((a,b) => {
+			const av = a.stats[statKey] || 0;
+			const bv = b.stats[statKey] || 0;
+			if (bv !== av) return bv - av;
+			return a.idx - b.idx;
+		});
+	}
 
-	list.forEach(item => {
-		const it = document.createElement('div');
-		it.className = 'sorted-item';
+	// Build table
+	const table = document.createElement('table');
+	table.className = 'view-table';
+	const thead = document.createElement('thead');
+	const headRow = document.createElement('tr');
 
-		const thumb = document.createElement('div');
-		thumb.className = 'sorted-thumb';
+	// helper to create header cell with click-to-cycle sort
+	function makeTh(key, label) {
+		const th = document.createElement('th');
+		th.setAttribute('data-stat', key);
+		th.tabIndex = 0;
+		// give the name column a class so we can align it left
+		th.className = 'view-th' + (key && key !== 'thumb' ? ' col-' + key : '');
+		th.textContent = label;
+		th.addEventListener('click', () => {
+			// cycle: none -> desc -> asc -> none
+			if (chartSortState.col !== key) { chartSortState.col = key; chartSortState.dir = -1; }
+			else if (chartSortState.dir === -1) chartSortState.dir = 1;
+			else { chartSortState.col = null; chartSortState.dir = 0; }
+			updateSortedView(statKey, displayMode);
+		});
+		return th;
+	}
+
+	// Combined name column that will contain both image and name
+	const nameHeader = makeTh('name', 'Name');
+	nameHeader.className = 'view-th col-name';
+	headRow.appendChild(nameHeader);
+	headRow.appendChild(makeTh('health', 'Health'));
+	headRow.appendChild(makeTh('skill', 'Skill'));
+	headRow.appendChild(makeTh('speed', 'Speed'));
+	headRow.appendChild(makeTh('stam', 'Stamina'));
+	headRow.appendChild(makeTh('stealth', 'Stealth'));
+	headRow.appendChild(makeTh('extract', 'Extract'));
+	thead.appendChild(headRow);
+	table.appendChild(thead);
+
+	const tbody = document.createElement('tbody');
+
+	// Update header indicators for sort direction
+	function refreshHeaderIndicators() {
+		const ths = thead.querySelectorAll('th');
+		ths.forEach(th => {
+			const key = th.getAttribute('data-stat');
+			// clear marker
+			const marker = th.querySelector('.sort-marker');
+			if (marker) marker.remove();
+			if (chartSortState.col === key) {
+				const m = document.createElement('span');
+				m.className = 'sort-marker';
+				m.textContent = chartSortState.dir === -1 ? ' ▼' : (chartSortState.dir === 1 ? ' ▲' : '');
+				th.appendChild(m);
+			}
+		});
+	}
+
+	refreshHeaderIndicators();
+
+	// Render rows
+	sorted.forEach(item => {
+		const tr = document.createElement('tr');
+
+		const tdName = document.createElement('td');
+		tdName.className = 'sorted-name';
+		// Create a container for image and name
+		const nameContainer = document.createElement('div');
+		nameContainer.className = 'name-container';
+		
 		const img = document.createElement('img');
 		img.src = item.toon ? `img/toons/${item.name.toLowerCase()}.png` : 'img/toons/goob.png';
 		img.onerror = function(){ this.src = 'img/toons/goob.png'; };
-		thumb.appendChild(img);
+		img.className = 'toon-thumb';
+		
+		const nameSpan = document.createElement('span');
+		nameSpan.textContent = item.name || 'Unknown';
+		
+		nameContainer.appendChild(img);
+		nameContainer.appendChild(nameSpan);
+		tdName.appendChild(nameContainer);
+		tr.appendChild(tdName);
 
-		const nameEl = document.createElement('div');
-		nameEl.className = 'sorted-name';
-		nameEl.textContent = item.name || 'Unknown';
+		statsOrder.forEach(stat => {
+			const td = document.createElement('td');
+			td.className = 'sorted-stat col-' + stat;
+			const val = item.stats[stat] || 0;
+			if (!displayMode || displayMode === 'Stars') {
+				if (stat === 'health') td.textContent = val > 0 ? '❤'.repeat(val) : '';
+				else td.textContent = val > 0 ? '★'.repeat(val) : '';
+			} else {
+				td.textContent = val > 0 ? formatStatValueGlobal(stat, val) : '';
+			}
+			tr.appendChild(td);
+		});
 
-		const valueEl = document.createElement('div');
-		valueEl.className = 'sorted-value';
-		if (!displayMode || displayMode === 'Stars') {
-			valueEl.textContent = item.val > 0 ? '★'.repeat(item.val) : '';
-		} else {
-			// format using existing formatter when possible
-			const formatted = typeof formatValueForStat === 'function' ? formatValueForStat(statKey, item.val) : String(item.val);
-			valueEl.textContent = item.val > 0 ? formatted : '';
-		}
-
-		it.appendChild(thumb);
-		it.appendChild(nameEl);
-		it.appendChild(valueEl);
-
-		container.appendChild(it);
+		tbody.appendChild(tr);
 	});
+
+	table.appendChild(tbody);
+	container.appendChild(table);
 }
 
 // Toon selection functionality
@@ -231,24 +343,7 @@ function createProfileSelector() {
 		return (typeof getToon === 'function') ? getToon(toonName) : (TOONS.find(x => x.name.toLowerCase() === String(toonName).toLowerCase()) || null);
 	}
 
-	// Helper to format a value for a given stat and star rating
-	function formatValueForStat(stat, starRating) {
-		const row = (typeof getValueRow === 'function') ? getValueRow(starRating) : (STAR_VALUE.find(r => r.star === Number(starRating)) || null);
-		if (!row) return '';
-		if (stat === 'skill') {
-			const v = row.skill; // [x, y]
-			return Array.isArray(v) ? `${v[0]} (${v[1]})` : String(v);
-		}
-		if (stat === 'speed') {
-			const v = row.speed; // [x, y]
-			return Array.isArray(v) ? `${v[0]} (${v[1]})` : String(v);
-		}
-		if (stat === 'stam') return String(row.stamina);
-		if (stat === 'stealth') return String(row.stealth);
-		if (stat === 'extract') return String(row.extract);
-		// health doesn't have a mapping in STAR_VALUE; just return the raw star number
-		return String(starRating);
-	}
+		// Use global formatter for converting star rating to value
 
 	// Helper to update the stat UI for a given toon name, respecting pager mode
 	function updateProfileStats(toonName) {
@@ -262,11 +357,16 @@ function createProfileSelector() {
 			el.setAttribute('data-mode', pagerIndex === 0 ? 'stars' : 'numbers');
 			if (pagerIndex === 0) {
 				// Stars mode
-				const star = '★';
-				el.textContent = val > 0 ? star.repeat(val) : '';
+				if (stat === 'health') {
+					const heart = '❤';
+					el.textContent = val > 0 ? heart.repeat(val) : '';
+				} else {
+					const star = '★';
+					el.textContent = val > 0 ? star.repeat(val) : '';
+				}
 			} else {
 				// Value mode
-				el.textContent = val > 0 ? formatValueForStat(stat, val) : '';
+				el.textContent = val > 0 ? formatStatValueGlobal(stat, val) : '';
 			}
 		});
 
