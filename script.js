@@ -174,7 +174,10 @@ function updateSortedView(statKey, displayMode) {
 		const toon = findToonGlobal(baseName);
 		const stats = {};
 		statsOrder.forEach(s => { stats[s] = toon && typeof toon[s] === 'number' ? toon[s] : 0; });
-		return { name: displayName, baseName, toon, stats, idx };
+		// Read trinket ids (if any) from slot attributes
+		const t0 = slot.getAttribute('data-trinket-0') || '';
+		const t1 = slot.getAttribute('data-trinket-1') || '';
+		return { name: displayName, baseName, toon, stats, idx, trinkets: [t0, t1] };
 	});
 
 	// Determine sorting: header clicks control chartSortState; if none set, default to statKey desc
@@ -355,9 +358,25 @@ function updateSortedView(statKey, displayMode) {
 		
 		const nameSpan = document.createElement('span');
 		nameSpan.textContent = item.name || 'Unknown';
-		
+
 		nameContainer.appendChild(img);
 		nameContainer.appendChild(nameSpan);
+
+		// Trinket icons (up to 2)
+		if (item.trinkets && item.trinkets.length) {
+			const trDiv = document.createElement('div');
+			trDiv.className = 'sorted-trinkets';
+			item.trinkets.forEach(id => {
+				if (!id) return;
+				const timg = document.createElement('img');
+				timg.src = `img/trinkets/${id}.png`;
+				timg.alt = id;
+				timg.className = 'trinket-thumb';
+				timg.onerror = function(){ this.src = 'img/trinkets/placeholder.png'; };
+				trDiv.appendChild(timg);
+			});
+			nameContainer.appendChild(trDiv);
+		}
 		tdName.appendChild(nameContainer);
 		tr.appendChild(tdName);
 
@@ -437,13 +456,26 @@ function createToonSelector() {
 				toonSlot.className = 'slot filled';
 				// store the base toon name for lookups (so labeled duplicates don't break lookups)
 				toonSlot.setAttribute('data-toon-base', toon.name);
+				// Initialize empty trinket attributes
+				toonSlot.setAttribute('data-trinket-0', '');
+				toonSlot.setAttribute('data-trinket-1', '');
 				toonSlot.innerHTML = `
-					<div class="toon-wrapper">
-						<img src="img/toons/${toon.name.toLowerCase()}.png" alt="${toon.name}"
-							onerror="this.src='img/toons/goob.png'">
-						<button class="remove-toon" aria-label="Remove ${toon.name}">×</button>
+					<div class="card">
+						<div class="card-top">
+							<div class="thumb-container">
+								<img src="img/toons/${toon.name.toLowerCase()}.png" alt="${toon.name}"
+									onerror="this.src='img/toons/goob.png'">
+								</div>
+								<div class="trinket-container">
+									<button class="trinket-slot" data-index="0" aria-label="Trinket slot 1"></button>
+									<button class="trinket-slot" data-index="1" aria-label="Trinket slot 2"></button>
+								</div>
+							</div>
+							<div class="card-bottom">
+								<span class="toon-name">${toon.name}</span>
+							</div>
 					</div>
-					<span>${toon.name}</span>
+					<button class="remove-toon" aria-label="Remove ${toon.name}">×</button>
 				`;
 
 				// Remove button
@@ -465,6 +497,17 @@ function createToonSelector() {
 				toonSlot.addEventListener('click', () => {
 					activeSlot = toonSlot;
 					if (popup) popup.classList.add('active');
+				});
+
+				// Trinket slot handlers (open trinket selector)
+				const trinketButtons = toonSlot.querySelectorAll('.trinket-slot');
+				trinketButtons.forEach(btn => {
+					btn.addEventListener('click', (e) => {
+						e.stopPropagation();
+						const idx = Number(btn.getAttribute('data-index')) || 0;
+						// open the trinket selector for this slot
+						if (typeof openTrinketPopup === 'function') openTrinketPopup(toonSlot, idx);
+					});
 				});
 
 				updateAddButton();
@@ -497,6 +540,80 @@ function createToonSelector() {
 	// Initialize
 	buildToonGrid();
 	updateAddButton();
+}
+
+// Trinket selector functionality
+function createTrinketSelector() {
+	const popup = document.querySelector('.trinket-selector-popup');
+	const grid = popup ? popup.querySelector('.trinket-grid') : null;
+
+	// active target is the party slot element and index (0 or 1)
+	let activeTarget = null;
+	let activeIndex = 0;
+
+	function buildGrid(slotEl) {
+		if (!grid) return;
+		grid.innerHTML = '';
+		// TRINKETS should be available from database.js
+		const list = (typeof TRINKETS !== 'undefined') ? TRINKETS : [];
+		list.forEach(t => {
+			const item = document.createElement('div');
+			item.className = 'trinket-item';
+			item.setAttribute('data-id', t.id);
+			item.innerHTML = `<img src="img/trinkets/${t.id}.png" alt="${t.name}" onerror="this.src='img/trinkets/placeholder.png'"><span>${t.name}</span>`;
+			// If the other slot on the same toon already has this trinket, disable it
+			if (slotEl) {
+				const otherIdx = activeIndex === 0 ? 1 : 0;
+				const other = slotEl.getAttribute('data-trinket-' + otherIdx) || '';
+				if (other && other === t.id) item.classList.add('disabled');
+			}
+
+			item.addEventListener('click', () => {
+				if (!activeTarget) return;
+				// assign to attribute on slot
+				activeTarget.setAttribute('data-trinket-' + activeIndex, t.id);
+				// update UI in the party slot
+				const btn = activeTarget.querySelector('.trinket-slot[data-index="' + activeIndex + '"]');
+				if (btn) {
+					btn.innerHTML = `<img src="img/trinkets/${t.id}.png" alt="${t.name}" onerror="this.src='img/trinkets/placeholder.png'">`;
+				}
+				closePopup();
+			});
+
+			grid.appendChild(item);
+		});
+	}
+
+	function onClickOutside(e) {
+		if (e.target === popup) closePopup();
+	}
+
+	function openPopupFor(slotEl, idx) {
+		if (!popup) return;
+		activeTarget = slotEl;
+		activeIndex = Number(idx) || 0;
+		buildGrid(slotEl);
+		popup.classList.add('active');
+		popup.addEventListener('click', onClickOutside);
+	}
+
+	function closePopup() {
+		if (!popup) return;
+		popup.classList.remove('active');
+		popup.removeEventListener('click', onClickOutside);
+		activeTarget = null;
+		activeIndex = 0;
+		// refresh sorted view if present
+		if (typeof updateSortedView === 'function') updateSortedView();
+	}
+
+	// Expose open function for other code
+	window.openTrinketPopup = openPopupFor;
+
+	// Close when ESC pressed
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape' && popup && popup.classList.contains('active')) closePopup();
+	});
 }
 
 // Profile picture selector functionality
@@ -648,8 +765,9 @@ function createProfileSelector() {
     // DOM ready: initialize UI
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize selectors
-    createToonSelector();
-    createProfileSelector();
+	createToonSelector();
+	createTrinketSelector();
+	createProfileSelector();
     
     // Set default profile to Boxten
     const boxtenProfile = document.querySelector('.profile-grid .toon-item[data-toon="Boxten"]');

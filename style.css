@@ -231,22 +231,26 @@ body {
 }
 
 .party-panel .slot {
-  width: 62px;
-  height: 82px; /* Increased to accommodate name below */
-  border-radius: 10px;
-  background: var(--bg-surface);
-  border: 1px solid hsla(var(--base-hue), 20%, 0%, 0.4);
-  box-shadow: var(--shadow-md);
-  cursor: pointer;
-  overflow: visible; /* Allow name to show below */
-  position: relative;
-  transition: all 0.2s ease;
+    width: 110px;
+    height: auto;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    cursor: pointer;
+    overflow: visible; /* Allow name to show below */
+    position: relative;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
 }
 
 .party-panel .slot.filled {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .party-panel .slot.filled:hover {
@@ -255,42 +259,64 @@ body {
 }
 
 .party-panel .slot.filled .toon-wrapper {
-  width: 62px;
-  height: 62px;
-  position: relative;
-  overflow: hidden;
-  border-radius: 10px;
+    width: 100%;
+    padding: 6px 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-sizing: border-box;
 }
 
 .party-panel .slot.filled img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 8px;
 }
 
-.party-panel .slot.filled .remove-toon {
-  position: absolute;
-  top: -2px;
-  right: -2px;
-  border-radius: 8px;
-  border: none;
-  width: 20px;
-  height: 20px;
-  background: var(--bg-highest);
-  color: var(--text-bright);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  z-index: 2;
+.party-panel .slot .card { 
+        width: 100%;
+    background: var(--bg-surface);
+    border: 1px solid hsla(var(--base-hue), 20%, 0%, 0.4);
+    box-shadow: var(--shadow-md);
+    border-radius: 8px;
+    padding: 8px;
+    box-sizing: border-box;
+    display:flex;
+    flex-direction: column;
+    gap:6px;
+    position: relative;
 }
 
-.party-panel .slot.filled:hover .remove-toon {
-  opacity: 1;
+.party-panel .slot.filled .thumb-container { position: relative; width:56px; height:56px; }
+
+.party-panel .slot .remove-toon {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    border-radius: 6px;
+    border: none;
+    width: 22px;
+    height: 22px;
+    background: var(--bg-highest);
+    color: var(--text-bright);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.16s ease, transform 0.12s ease;
+    z-index: 5;
+    box-shadow: var(--shadow-sm);
 }
+
+.party-panel .slot.filled:hover .remove-toon { opacity: 1; transform: translateY(-2px); }
+
+/* Card top and bottom */
+.card-top { display:flex; align-items:center; gap:8px; }
+.card-bottom { display:flex; align-items:center; justify-content:center; }
+.card-bottom .toon-name { font-size:12px; font-weight:700; color:var(--text-bright); }
 
 
 .party-panel .slot.filled span {
@@ -771,6 +797,60 @@ body {
     font-weight: 600;
     text-align: center;
 }
+
+/* Trinket slot visuals (small circles to the right of the toon image) */
+.trinket-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-left: 6px;
+}
+.trinket-slot {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: var(--bg-base);
+    border: 1px solid hsla(var(--base-hue),20%,0%,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+}
+.trinket-slot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Trinket selector popup */
+.trinket-selector-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100;
+}
+.trinket-selector-popup.active { display:flex; }
+.trinket-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 12px;
+}
+.trinket-item {
+    display:flex; flex-direction:column; align-items:center; gap:6px; padding:8px; cursor:pointer; border-radius:8px;
+}
+.trinket-item img { width:64px; height:64px; object-fit:contain; border-radius:6px; background:var(--bg-surface); }
+.trinket-item.disabled { opacity:0.35; pointer-events:none; }
+
+/* Sorted view trinket icons */
+.sorted-trinkets { display:flex; gap:6px; align-items:center; margin-left:8px; }
+.trinket-thumb { width:20px; height:20px; object-fit:cover; border-radius:4px; border:1px solid hsla(var(--base-hue),20%,0%,0.12); }
 
 @media (max-width: 420px) {
 	.party-panel .slot, .add-slot { width:48px; height:48px }
