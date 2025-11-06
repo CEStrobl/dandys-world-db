@@ -269,8 +269,10 @@ body {
 
 .party-panel .slot.filled .remove-toon {
   position: absolute;
-  top: -6px;
-  right: -6px;
+  top: -2px;
+  right: -2px;
+  border-radius: 8px;
+  border: none;
   width: 20px;
   height: 20px;
   background: var(--bg-highest);
@@ -630,6 +632,13 @@ body {
     padding: 5px 10px;
     border-radius: 6px;
 }
+/* When showing numeric values, reduce size and allow wrapping so labels fit */
+.stat-stars[data-mode="numbers"] {
+    font-size: 13px;
+    padding: 6px 8px;
+    white-space: normal;
+    line-height: 1.2;
+}
 /* Apply letter spacing only in star mode */
 .stat-stars[data-mode="stars"] {
     letter-spacing: 4px;
@@ -790,36 +799,7 @@ body {
     color: var(--text-bright);
     font-size: 14px;
 }
-.view-controls select {
-    color: var(--text-bright);
-    border: 1px solid hsla(var(--base-hue),20%,0%,0.3);
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    /* Prevent text selection while scrolling */
-    user-select: none;
-    /* Show a custom cursor to hint at scroll functionality */
-    cursor: ns-resize;
-}
-/* Trait select with color backgrounds */
-.trait-select {
-    flex: 1;
-    min-width: 120px;
-    background: var(--bg-base);
-}
-.trait-select option[value="Skill check"] { background-color: var(--skill); }
-.trait-select option[value="Speed"] { background-color: var(--speed); }
-.trait-select option[value="Stamina"] { background-color: var(--stamina); }
-.trait-select option[value="Stealth"] { background-color: var(--stealth); }
-.trait-select option[value="Extraction"] { background-color: var(--extract); }
-/* Color the select based on current choice */
-.trait-select[data-current="Skill check"] { background-color: var(--skill); }
-.trait-select[data-current="Speed"] { background-color: var(--speed); }
-.trait-select[data-current="Stamina"] { background-color: var(--stamina); }
-.trait-select[data-current="Stealth"] { background-color: var(--stealth); }
-.trait-select[data-current="Extraction"] { background-color: var(--extract); }
+
 /* Display select (Stars/Value) */
 .display-select {
     background: var(--bg-highest);
@@ -857,20 +837,99 @@ body {
 
 /* Set wider width for name column */
 .view-table thead th.col-name {
-    width: 180px;
-    min-width: 180px;
+    width: 120px;
     text-align: left;
     padding-left: 60px;  /* Space for the icon */
 }
 
-/* Set fixed width for stat columns */
-.view-table thead th:not(.col-name) {
-    width: 120px;
-}
 .view-table tbody td {
     border-top: 1px solid hsla(var(--base-hue), 20%, 0%, 0.04);
     text-align: center;
 }
+
+/* Allow value labels to wrap and fit in table cells; slightly smaller font for clarity */
+.view-table td {
+    white-space: normal;
+    font-size: 13px;
+}
+
+.view-table .sorted-stat {
+	font-weight: 700;
+	font-size: 13px;
+}
+
+.value-cell {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+}
+
+.value-cell .number {
+	font-weight: 700;
+	font-size: 13px;
+}
+
+.value-cell .label {
+	font-size: 11px;
+	opacity: 0.8;
+}
+
+.value-cell.type-table {
+	flex-direction: column;
+	gap: 2px;
+	padding: 4px;
+	text-align: center;
+}
+
+.value-cell.type-profile {
+	display: inline-flex;
+	margin-right: 8px;
+}
+
+/* Value cells in table */
+.view-table .value-cell.type-table {
+	padding: 6px 2px 4px;
+	min-width: 40px;
+}
+
+.view-table .value-cell.type-table .number {
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.view-table .value-cell.type-table .label {
+	font-size: 10px;
+	opacity: 0.7;
+	text-transform: uppercase;
+	margin-top: 2px;
+}
+
+/* Value cells in profile */
+.view-table .value-cell.type-profile {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	margin-right: 12px;
+}
+
+.view-table .value-cell.type-profile .number {
+	font-weight: 700;
+}
+
+.view-table .value-cell.type-profile .label {
+	opacity: 0.7;
+}
+
+/* Compact value cell styling used in Value mode */
+.value-cell { display:flex; flex-direction:column; align-items:center; gap:2px; }
+.value-cell .value-primary { font-weight:800; font-size:14px; color:var(--text-bright); }
+.value-cell .value-secondary { font-size:11px; color:var(--text-muted); }
+
+/* Profile stat box using the same compact styling (centred) */
+.stat-stars[data-mode="numbers"] .value-cell { display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.stat-stars[data-mode="numbers"] .value-primary { font-size:14px; font-weight:800; }
+.stat-stars[data-mode="numbers"] .value-secondary { font-size:11px; color:var(--text-muted); }
 
 .view-table tbody td:first-child {
     width: 60px;

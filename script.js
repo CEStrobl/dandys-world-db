@@ -17,16 +17,73 @@ function findToonGlobal(toonName) {
 function formatStatValueGlobal(stat, starRating) {
 	const row = (typeof getValueRow === 'function') ? getValueRow(starRating) : (STAR_VALUE.find(r => r.star === Number(starRating)) || null);
 	if (!row) return String(starRating || '');
+	// For skill and speed we return labeled values to make the meaning clear
+	// Assumptions:
+	//  - row.skill is [skillValue, skillSize] -> display as "Skill: <skill> (Size: <size>)"
+	//  - row.speed is [walkSpeed, runSpeed]     -> display as "Walk: <walk> (Run: <run>)"
+	// These labels clarify primary vs secondary values without changing Stars mode elsewhere.
 	if (stat === 'skill') {
-		const v = row.skill; return Array.isArray(v) ? `${v[0]} (${v[1]})` : String(v);
+		const v = row.skill;
+		if (Array.isArray(v)) return `Skill: ${v[0]} (Size: ${v[1]})`;
+		return `Skill: ${String(v)}`;
 	}
 	if (stat === 'speed') {
-		const v = row.speed; return Array.isArray(v) ? `${v[0]} (${v[1]})` : String(v);
+		const v = row.speed;
+		if (Array.isArray(v)) return `Walk: ${v[0]} (Run: ${v[1]})`;
+		return `Speed: ${String(v)}`;
 	}
 	if (stat === 'stam') return String(row.stamina);
 	if (stat === 'stealth') return String(row.stealth);
 	if (stat === 'extract') return String(row.extract);
 	return String(starRating);
+}
+
+// Compact HTML formatter for Value mode (returns different formats for table vs profile)
+function formatStatValueHTML(stat, starRating, mode = 'table') {
+	const row = (typeof getValueRow === 'function') ? getValueRow(starRating) : (STAR_VALUE.find(r => r.star === Number(starRating)) || null);
+	if (!row) return '';
+	
+	if (stat === 'skill') {
+		const v = row.skill;
+		if (Array.isArray(v)) {
+			if (mode === 'profile') {
+				return `<div class="value-cell type-profile"><span class="number">${v[0]}, ${v[1]}</span><span class="label">Check/Size</span></div>`;
+			} else {
+				return `<td class="sorted-stat col-skill"><div class="value-cell type-table"><span class="number">${v[0]}</span></div></td>
+					<td class="sorted-stat col-skill"><div class="value-cell type-table"><span class="number">${v[1]}</span></div></td>`;
+			}
+		}
+		return mode === 'profile' ? 
+			`<div class="value-cell type-profile"><span class="number">${String(v)}</span><span class="label">Value</span></div>` :
+			`<td class="sorted-stat col-skill"><div class="value-cell type-table"><span class="number">${String(v)}</span></div></td>`;
+	}
+	if (stat === 'speed') {
+		const v = row.speed;
+		if (Array.isArray(v)) {
+			if (mode === 'profile') {
+				return `<div class="value-cell type-profile"><span class="number">${v[0]}, ${v[1]}</span><span class="label">Walk/Run</span></div>`;
+			} else {
+				return `<td class="sorted-stat col-speed"><div class="value-cell type-table"><span class="number">${v[0]}</span></div></td>
+					<td class="sorted-stat col-speed"><div class="value-cell type-table"><span class="number">${v[1]}</span></div></td>`;
+			}
+		}
+		return mode === 'profile' ?
+			`<div class="value-cell type-profile"><span class="number">${String(v)}</span><span class="label">Speed</span></div>` :
+			`<td class="sorted-stat col-speed"><div class="value-cell type-table"><span class="number">${String(v)}</span></div></td>
+			<td class="sorted-stat col-speed"><div class="value-cell type-table"><span class="number">-</span></div></td>`;
+	}
+	
+	const simpleValue = stat === 'stam' ? row.stamina : 
+		(stat === 'stealth' ? row.stealth : 
+		(stat === 'extract' ? row.extract : starRating));
+		
+	const label = stat === 'stam' ? 'Stamina' :
+		(stat === 'stealth' ? 'Stealth' :
+		(stat === 'extract' ? 'Extract' : stat));
+	
+	return mode === 'profile' ?
+		`<div class="value-cell type-profile"><span class="number">${String(simpleValue)}</span><span class="label">${label}</span></div>` :
+		`<td class="sorted-stat col-${stat}" colspan="2"><div class="value-cell type-table"><span class="number">${String(simpleValue)}</span></div></td>`;
 }
 
 // Chart sorting state shared across renders
@@ -148,12 +205,86 @@ function updateSortedView(statKey, displayMode) {
 	nameHeader.className = 'view-th col-name';
 	headRow.appendChild(nameHeader);
 	headRow.appendChild(makeTh('health', 'Health'));
-	headRow.appendChild(makeTh('skill', 'Skill'));
-	headRow.appendChild(makeTh('speed', 'Speed'));
+	
+	// Create headers for skill and speed (split into specific values in Value mode)
+	if (displayMode === 'Value') {
+		// Create split headers for Value mode
+		const skillValueHeader = document.createElement('th');
+		skillValueHeader.className = 'view-th col-skill';
+		skillValueHeader.textContent = 'Value';
+		skillValueHeader.addEventListener('click', () => {
+			if (chartSortState.col !== 'skill') { chartSortState.col = 'skill'; chartSortState.dir = -1; }
+			else if (chartSortState.dir === -1) chartSortState.dir = 1;
+			else { chartSortState.col = null; chartSortState.dir = 0; }
+			updateSortedView(statKey, displayMode);
+		});
+		headRow.appendChild(skillValueHeader);
+
+		const skillSizeHeader = document.createElement('th');
+		skillSizeHeader.className = 'view-th col-skill';
+		skillSizeHeader.textContent = 'Size';
+		skillSizeHeader.addEventListener('click', () => {
+			if (chartSortState.col !== 'skill') { chartSortState.col = 'skill'; chartSortState.dir = -1; }
+			else if (chartSortState.dir === -1) chartSortState.dir = 1;
+			else { chartSortState.col = null; chartSortState.dir = 0; }
+			updateSortedView(statKey, displayMode);
+		});
+		headRow.appendChild(skillSizeHeader);
+
+		const speedWalkHeader = document.createElement('th');
+		speedWalkHeader.className = 'view-th col-speed';
+		speedWalkHeader.textContent = 'Walk';
+		speedWalkHeader.addEventListener('click', () => {
+			if (chartSortState.col !== 'speed') { chartSortState.col = 'speed'; chartSortState.dir = -1; }
+			else if (chartSortState.dir === -1) chartSortState.dir = 1;
+			else { chartSortState.col = null; chartSortState.dir = 0; }
+			updateSortedView(statKey, displayMode);
+		});
+		headRow.appendChild(speedWalkHeader);
+
+		const speedRunHeader = document.createElement('th');
+		speedRunHeader.className = 'view-th col-speed';
+		speedRunHeader.textContent = 'Run';
+		speedRunHeader.addEventListener('click', () => {
+			if (chartSortState.col !== 'speed') { chartSortState.col = 'speed'; chartSortState.dir = -1; }
+			else if (chartSortState.dir === -1) chartSortState.dir = 1;
+			else { chartSortState.col = null; chartSortState.dir = 0; }
+			updateSortedView(statKey, displayMode);
+		});
+		headRow.appendChild(speedRunHeader);
+	} else {
+		// Single column headers for Stars mode
+		const skillHeader = document.createElement('th');
+		skillHeader.className = 'view-th col-skill';
+		skillHeader.textContent = 'Skill';
+		skillHeader.colSpan = 2;
+		skillHeader.addEventListener('click', () => {
+			if (chartSortState.col !== 'skill') { chartSortState.col = 'skill'; chartSortState.dir = -1; }
+			else if (chartSortState.dir === -1) chartSortState.dir = 1;
+			else { chartSortState.col = null; chartSortState.dir = 0; }
+			updateSortedView(statKey, displayMode);
+		});
+		headRow.appendChild(skillHeader);
+
+	const speedHeader = document.createElement('th');
+	speedHeader.className = 'view-th col-speed';
+	speedHeader.textContent = 'Speed';
+	speedHeader.colSpan = 2;
+	speedHeader.addEventListener('click', () => {
+		if (chartSortState.col !== 'speed') { chartSortState.col = 'speed'; chartSortState.dir = -1; }
+		else if (chartSortState.dir === -1) chartSortState.dir = 1;
+		else { chartSortState.col = null; chartSortState.dir = 0; }
+		updateSortedView(statKey, displayMode);
+	});
+	headRow.appendChild(speedHeader);
+	}
+
 	headRow.appendChild(makeTh('stam', 'Stamina'));
 	headRow.appendChild(makeTh('stealth', 'Stealth'));
 	headRow.appendChild(makeTh('extract', 'Extract'));
 	thead.appendChild(headRow);
+
+	
 	table.appendChild(thead);
 
 	const tbody = document.createElement('tbody');
@@ -201,19 +332,26 @@ function updateSortedView(statKey, displayMode) {
 		tr.appendChild(tdName);
 
 		statsOrder.forEach(stat => {
-			const td = document.createElement('td');
-			td.className = 'sorted-stat col-' + stat;
 			const val = item.stats[stat] || 0;
 			if (!displayMode || displayMode === 'Stars') {
+				const td = document.createElement('td');
+				td.className = 'sorted-stat col-' + stat;
 				if (stat === 'health') td.textContent = val > 0 ? '❤'.repeat(val) : '';
 				else td.textContent = val > 0 ? '★'.repeat(val) : '';
+				if (stat === 'skill' || stat === 'speed') td.colSpan = 2;
+				tr.appendChild(td);
 			} else {
-				td.textContent = val > 0 ? formatStatValueGlobal(stat, val) : '';
+				if (stat === 'skill' || stat === 'speed') {
+					// For skill and speed in value mode, we create split cells
+					tr.insertAdjacentHTML('beforeend', formatStatValueHTML(stat, val, 'table'));
+				} else {
+					const td = document.createElement('td');
+					td.className = 'sorted-stat col-' + stat;
+					td.textContent = val > 0 ? formatStatValueGlobal(stat, val) : '';
+					tr.appendChild(td);
+				}
 			}
-			tr.appendChild(td);
-		});
-
-		tbody.appendChild(tr);
+		});		tbody.appendChild(tr);
 	});
 
 	table.appendChild(tbody);
@@ -364,13 +502,19 @@ function createProfileSelector() {
 					const star = '★';
 					el.textContent = val > 0 ? star.repeat(val) : '';
 				}
+		} else {
+			// Value mode: use compact HTML for skill/speed to be more aesthetic
+			if (val > 0) {
+				if (stat === 'skill' || stat === 'speed') {
+					el.innerHTML = formatStatValueHTML(stat, val);
+				} else {
+					el.textContent = formatStatValueGlobal(stat, val);
+				}
 			} else {
-				// Value mode
-				el.textContent = val > 0 ? formatStatValueGlobal(stat, val) : '';
+				el.textContent = '';
 			}
-		});
-
-		// Update profile name display
+		}
+	});		// Update profile name display
 		const nameEl = document.querySelector('.profile-name');
 		if (nameEl) nameEl.textContent = t ? t.name : 'No Toon';
 	}
