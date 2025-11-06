@@ -202,14 +202,15 @@ body {
 .panel-header {
     display: flex;
     align-items: center;
-    gap: 12px;
+    h3 {
+        margin: 10px 0px;
+    }
 }
 
 .panel-header.small {
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 12px;
     margin-bottom: 16px;
 }
 
@@ -833,6 +834,7 @@ body {
     user-select: none;
     position: relative;
     height: 40px;
+    font-size: 14px;
 }
 
 /* Set wider width for name column */

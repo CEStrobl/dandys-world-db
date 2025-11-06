@@ -101,8 +101,9 @@ function sortPartyByStat(statKey) {
 	// Map slots to values and stable-sort
 	const decorated = slots.map((slot, idx) => {
 		const nameEl = slot.querySelector('span');
-		const name = nameEl ? nameEl.textContent.trim() : '';
-		const toon = findToonGlobal(name);
+		const displayName = nameEl ? nameEl.textContent.trim() : '';
+		const baseName = slot.getAttribute('data-toon-base') || (displayName.replace(/\d+$/,'') || displayName);
+		const toon = findToonGlobal(baseName);
 		const val = toon && typeof toon[statKey] === 'number' ? toon[statKey] : 0;
 		return { slot, val, idx };
 	});
@@ -116,6 +117,34 @@ function sortPartyByStat(statKey) {
 	decorated.forEach(d => {
 		if (addButton) partyMembers.insertBefore(d.slot, addButton);
 		else partyMembers.appendChild(d.slot);
+	});
+}
+
+// If there are duplicate toons in the party, give them numbered labels
+// e.g. Boxten, Boxten -> Boxten1, Boxten2 (only when duplicates exist)
+function assignDuplicateLabels() {
+	const partyMembers = document.querySelector('.party-members');
+	if (!partyMembers) return;
+	const slots = Array.from(partyMembers.querySelectorAll('.slot.filled'));
+	const groups = {};
+	slots.forEach(s => {
+		const base = s.getAttribute('data-toon-base') || (s.querySelector('span') ? s.querySelector('span').textContent.trim() : '');
+		if (!groups[base]) groups[base] = [];
+		groups[base].push(s);
+	});
+
+	Object.keys(groups).forEach(name => {
+		const arr = groups[name];
+		if (arr.length > 1) {
+			arr.forEach((s, i) => {
+				const span = s.querySelector('span');
+				if (span) span.textContent = `${name}${i+1}`;
+			});
+		} else {
+			const s = arr[0];
+			const span = s.querySelector('span');
+			if (span) span.textContent = name;
+		}
 	});
 }
 
@@ -140,11 +169,12 @@ function updateSortedView(statKey, displayMode) {
 	const partyMembers = document.querySelectorAll('.party-members .slot.filled');
 	const list = Array.from(partyMembers).map((slot, idx) => {
 		const nameEl = slot.querySelector('span');
-		const name = nameEl ? nameEl.textContent.trim() : '';
-		const toon = findToonGlobal(name);
+		const displayName = nameEl ? nameEl.textContent.trim() : '';
+		const baseName = slot.getAttribute('data-toon-base') || (displayName.replace(/\d+$/,'') || displayName);
+		const toon = findToonGlobal(baseName);
 		const stats = {};
 		statsOrder.forEach(s => { stats[s] = toon && typeof toon[s] === 'number' ? toon[s] : 0; });
-		return { name, toon, stats, idx };
+		return { name: displayName, baseName, toon, stats, idx };
 	});
 
 	// Determine sorting: header clicks control chartSortState; if none set, default to statKey desc
@@ -319,7 +349,7 @@ function updateSortedView(statKey, displayMode) {
 		nameContainer.className = 'name-container';
 		
 		const img = document.createElement('img');
-		img.src = item.toon ? `img/toons/${item.name.toLowerCase()}.png` : 'img/toons/goob.png';
+		img.src = item.toon ? `img/toons/${(item.baseName || item.name).toLowerCase()}.png` : 'img/toons/goob.png';
 		img.onerror = function(){ this.src = 'img/toons/goob.png'; };
 		img.className = 'toon-thumb';
 		
@@ -373,6 +403,8 @@ function createToonSelector() {
 		updatePartyCount(toonCount);
 		// Ensure add button is always last
 		if (partyMembers && addButton) partyMembers.appendChild(addButton);
+		// Re-label duplicates in the party so display names are unique when needed
+		if (typeof assignDuplicateLabels === 'function') assignDuplicateLabels();
 		// Update the sorted view (if present)
 		if (typeof updateSortedView === 'function') {
 			// read current view and mode selects if available
@@ -403,6 +435,8 @@ function createToonSelector() {
 
 				const toonSlot = document.createElement('div');
 				toonSlot.className = 'slot filled';
+				// store the base toon name for lookups (so labeled duplicates don't break lookups)
+				toonSlot.setAttribute('data-toon-base', toon.name);
 				toonSlot.innerHTML = `
 					<div class="toon-wrapper">
 						<img src="img/toons/${toon.name.toLowerCase()}.png" alt="${toon.name}"
