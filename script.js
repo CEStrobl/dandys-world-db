@@ -172,11 +172,43 @@ function updateSortedView(statKey, displayMode) {
 		const displayName = nameEl ? nameEl.textContent.trim() : '';
 		const baseName = slot.getAttribute('data-toon-base') || (displayName.replace(/\d+$/,'') || displayName);
 		const toon = findToonGlobal(baseName);
-		const stats = {};
-		statsOrder.forEach(s => { stats[s] = toon && typeof toon[s] === 'number' ? toon[s] : 0; });
-		// Read trinket ids (if any) from slot attributes
+		// Read trinket ids (if any) from slot attributes and lookup their effects
 		const t0 = slot.getAttribute('data-trinket-0') || '';
 		const t1 = slot.getAttribute('data-trinket-1') || '';
+		const trinkets = [t0, t1];
+
+		
+		const stats = {};
+
+		for (let i = 0; i < statsOrder.length; i++) {
+			const element = statsOrder[i];
+			if (toon && typeof toon[element] === 'number') {
+
+				stats[element] = toon[element];
+
+				// for (let o = 0; o < trinkets.length; o++) {
+				// 	const trinketid = trinkets[o];
+
+				// 	// find trinket object by id
+				// 	const trinketObj = (TRINKETS.find(x => x.id === trinketid) || null);
+				// 	if (trinketObj && trinketObj.slotType === "passive" && trinketObj.effects) {
+
+				// 		console.log("Found effect: ", trinketObj.effects);
+				// 		trinketObj.effects.forEach(effect => {
+				// 			if (effect.type === 'multiplier' && effect.stats && effect.stats.includes(element)) {
+				// 				stats[element] *= effect.value;
+				// 			} else if (effect.type === 'flat' && effect.stats && effect.stats.includes(element)) {
+				// 				stats[element] += effect.value;
+				// 			}
+				// 		});
+				// 	}
+
+				// }
+			} else {
+				stats[element] = 0;
+			}
+		}
+
 		return { name: displayName, baseName, toon, stats, idx, trinkets: [t0, t1] };
 	});
 

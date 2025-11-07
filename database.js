@@ -832,37 +832,5 @@ const EFFECT_TYPES = {
     GRANT_ITEM: "grantItem"
 };
 
-// Helper functions for trinket system
-function calculateTrinketEffect(toon, trinket) {
-    let effects = [];
-    for (let effect of trinket.effects) {
-        if (effect.stats) {
-            for (let stat of effect.stats) {
-                effects.push({
-                    stat,
-                    value: effect.type === EFFECT_TYPES.MULTIPLIER ? 
-                           toon[stat] * effect.value : 
-                           toon[stat] + effect.value
-                });
-            }
-        }
-    }
-    return effects;
-}
 
-function checkTrinketCondition(condition, gameState) {
-    if (!condition) return true;
-    
-    switch(condition.type) {
-        case "floorNumber":
-            return condition.operator === "even" ? 
-                   gameState.floor % 2 === 0 : 
-                   gameState.floor % 2 === 1;
-        case "panicMode":
-            return gameState.panicMode;
-        case "firstMachine":
-            return !gameState.machineActivated;
-        default:
-            return false;
-    }
-}
+
